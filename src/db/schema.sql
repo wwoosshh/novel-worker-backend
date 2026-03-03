@@ -107,35 +107,47 @@ alter table public.macros         enable row level security;
 alter table public.subscriptions  enable row level security;
 
 -- profiles
-create policy if not exists "profiles_public_read"  on public.profiles for select using (true);
-create policy if not exists "profiles_owner_write"  on public.profiles for all    using (auth.uid() = id);
+drop policy if exists "profiles_public_read" on public.profiles;
+create policy "profiles_public_read"  on public.profiles for select using (true);
+drop policy if exists "profiles_owner_write" on public.profiles;
+create policy "profiles_owner_write"  on public.profiles for all    using (auth.uid() = id);
 
 -- novels
-create policy if not exists "novels_public_read"    on public.novels for select
+drop policy if exists "novels_public_read" on public.novels;
+create policy "novels_public_read"    on public.novels for select
   using (is_public = true or auth.uid() = author_id);
-create policy if not exists "novels_author_write"   on public.novels for all
+drop policy if exists "novels_author_write" on public.novels;
+create policy "novels_author_write"   on public.novels for all
   using (auth.uid() = author_id);
 
 -- chapters
-create policy if not exists "chapters_public_read"  on public.chapters for select
+drop policy if exists "chapters_public_read" on public.chapters;
+create policy "chapters_public_read"  on public.chapters for select
   using (is_public = true or auth.uid() = (select author_id from public.novels where id = novel_id));
-create policy if not exists "chapters_author_write" on public.chapters for all
+drop policy if exists "chapters_author_write" on public.chapters;
+create policy "chapters_author_write" on public.chapters for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
 
 -- settings tables (author only)
-create policy if not exists "db_chars_author"   on public.db_characters for all
+drop policy if exists "db_chars_author" on public.db_characters;
+create policy "db_chars_author"   on public.db_characters for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
-create policy if not exists "db_locs_author"    on public.db_locations  for all
+drop policy if exists "db_locs_author" on public.db_locations;
+create policy "db_locs_author"    on public.db_locations  for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
-create policy if not exists "db_facs_author"    on public.db_factions   for all
+drop policy if exists "db_facs_author" on public.db_factions;
+create policy "db_facs_author"    on public.db_factions   for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
-create policy if not exists "db_items_author"   on public.db_items      for all
+drop policy if exists "db_items_author" on public.db_items;
+create policy "db_items_author"   on public.db_items      for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
-create policy if not exists "macros_author"     on public.macros        for all
+drop policy if exists "macros_author" on public.macros;
+create policy "macros_author"     on public.macros        for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
 
 -- subscriptions
-create policy if not exists "subs_own"          on public.subscriptions for all
+drop policy if exists "subs_own" on public.subscriptions;
+create policy "subs_own"          on public.subscriptions for all
   using (auth.uid() = user_id);
 
 -- ─── Trigger: auto-create profile on signup ───────────────────────────────────

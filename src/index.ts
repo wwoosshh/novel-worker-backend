@@ -8,6 +8,7 @@ dotenv.config();
 import novelsRouter   from "./routes/novels";
 import chaptersRouter from "./routes/chapters";
 import settingsRouter from "./routes/settings";
+import macrosRouter   from "./routes/macros";
 import usersRouter    from "./routes/users";
 
 const app  = express();
@@ -38,6 +39,7 @@ app.get("/health", async (_req, res) => {
 app.use("/api/novels",                        novelsRouter);
 app.use("/api/novels/:novelId/chapters",      chaptersRouter);
 app.use("/api/novels/:novelId/settings",      settingsRouter);
+app.use("/api/novels/:novelId/macros",        macrosRouter);
 app.use("/api/users",                         usersRouter);
 
 /* ─── 404 ────────────────────────────────────────── */
