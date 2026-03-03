@@ -6,8 +6,9 @@ import { z } from "zod";
 const router = express.Router({ mergeParams: true });
 
 const MacroSchema = z.object({
-  label:   z.string().min(1).max(50),
-  content: z.string().min(1).max(5000),
+  label:    z.string().min(1).max(50),
+  content:  z.string().min(1).max(5000),
+  shortcut: z.string().max(30).optional(),
 });
 
 async function checkOwnership(novelId: string, userId: string): Promise<boolean> {
@@ -41,8 +42,8 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const row = await queryOne(
-    "INSERT INTO macros (novel_id, label, content) VALUES ($1, $2, $3) RETURNING *",
-    [novelId, parsed.data.label, parsed.data.content]
+    "INSERT INTO macros (novel_id, label, content, shortcut) VALUES ($1, $2, $3, $4) RETURNING *",
+    [novelId, parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null]
   );
   res.status(201).json({ data: row });
 });
@@ -58,8 +59,8 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const row = await queryOne(
-    "UPDATE macros SET label = $1, content = $2 WHERE id = $3 AND novel_id = $4 RETURNING *",
-    [parsed.data.label, parsed.data.content, id, novelId]
+    "UPDATE macros SET label = $1, content = $2, shortcut = $3 WHERE id = $4 AND novel_id = $5 RETURNING *",
+    [parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null, id, novelId]
   );
   if (!row) return res.status(404).json({ error: "매크로를 찾을 수 없습니다." });
   res.json({ data: row });

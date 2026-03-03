@@ -84,6 +84,7 @@ create table if not exists public.macros (
   novel_id   uuid references public.novels(id) on delete cascade not null,
   label      text not null,
   content    text not null,
+  shortcut   text,
   created_at timestamptz default now() not null
 );
 
