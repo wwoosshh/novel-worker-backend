@@ -79,6 +79,21 @@ router.get("/", optionalAuth, async (req: AuthRequest, res: Response) => {
   res.json({ data: novels, total: parseInt((countRows[0] as any).total) });
 });
 
+/* ─── GET /api/novels/me/list — author's own novels ── */
+router.get("/me/list", requireAuth, async (req: AuthRequest, res: Response) => {
+  const novels = await query(
+    `SELECT
+       n.*,
+       (SELECT COUNT(*) FROM subscriptions s WHERE s.novel_id = n.id) AS subscriber_count,
+       (SELECT MAX(ch.number) FROM chapters ch WHERE ch.novel_id = n.id) AS latest_chapter
+     FROM novels n
+     WHERE n.author_id = $1
+     ORDER BY n.updated_at DESC`,
+    [req.userId]
+  );
+  res.json({ data: novels });
+});
+
 /* ─── GET /api/novels/:id ─────────────────────────── */
 router.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
   const novel = await queryOne(
@@ -163,21 +178,6 @@ router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
 
   await query("DELETE FROM novels WHERE id = $1", [req.params.id]);
   res.json({ message: "삭제되었습니다." });
-});
-
-/* ─── GET /api/novels/mine — author's own novels ─── */
-router.get("/me/list", requireAuth, async (req: AuthRequest, res: Response) => {
-  const novels = await query(
-    `SELECT
-       n.*,
-       (SELECT COUNT(*) FROM subscriptions s WHERE s.novel_id = n.id) AS subscriber_count,
-       (SELECT MAX(ch.number) FROM chapters ch WHERE ch.novel_id = n.id) AS latest_chapter
-     FROM novels n
-     WHERE n.author_id = $1
-     ORDER BY n.updated_at DESC`,
-    [req.userId]
-  );
-  res.json({ data: novels });
 });
 
 export default router;
