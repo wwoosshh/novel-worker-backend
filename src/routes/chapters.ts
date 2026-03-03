@@ -51,17 +51,20 @@ router.get("/:number", optionalAuth, async (req: AuthRequest, res: Response) => 
   const isAuthor = novel.author_id === req.userId;
 
   const chapter = await queryOne(
-    `SELECT *
-     FROM chapters
-     WHERE novel_id = $1 AND number = $2
-       ${isAuthor ? "" : "AND is_public = true"}`,
+    `SELECT c.*, n.title AS novel_title, n.chapter_count AS novel_chapter_count
+     FROM chapters c
+     JOIN novels n ON n.id = c.novel_id
+     WHERE c.novel_id = $1 AND c.number = $2
+       ${isAuthor ? "" : "AND c.is_public = true"}`,
     [novelId, chapterNum]
   );
 
   if (!chapter) return res.status(404).json({ error: "화를 찾을 수 없습니다." });
 
-  // Increment view count (fire-and-forget)
-  query("UPDATE chapters SET view_count = view_count + 1 WHERE id = $1", [(chapter as any).id]).catch(() => {});
+  // Increment view count only for non-author readers
+  if (!isAuthor) {
+    query("UPDATE chapters SET view_count = view_count + 1 WHERE id = $1", [(chapter as any).id]).catch(() => {});
+  }
 
   res.json({ data: chapter });
 });

@@ -109,8 +109,11 @@ router.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
 
   if (!novel) return res.status(404).json({ error: "소설을 찾을 수 없습니다." });
 
-  // Increment view count (fire-and-forget)
-  query("UPDATE novels SET view_count = view_count + 1 WHERE id = $1", [req.params.id]).catch(() => {});
+  // Increment view count only for non-author readers
+  const isAuthor = (novel as any).author_id === req.userId;
+  if (!isAuthor) {
+    query("UPDATE novels SET view_count = view_count + 1 WHERE id = $1", [req.params.id]).catch(() => {});
+  }
 
   res.json({ data: novel });
 });

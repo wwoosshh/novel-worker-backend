@@ -87,6 +87,17 @@ create table if not exists public.macros (
   created_at timestamptz default now() not null
 );
 
+-- ─── Notices (per-novel announcements) ───────────────────────────────────────
+create table if not exists public.notices (
+  id         uuid default uuid_generate_v4() primary key,
+  novel_id   uuid references public.novels(id) on delete cascade not null,
+  title      text not null,
+  content    text not null,
+  is_pinned  boolean default false,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
 -- ─── Subscriptions ────────────────────────────────────────────────────────────
 create table if not exists public.subscriptions (
   user_id    uuid references public.profiles(id) on delete cascade,
@@ -104,6 +115,7 @@ alter table public.db_locations   enable row level security;
 alter table public.db_factions    enable row level security;
 alter table public.db_items       enable row level security;
 alter table public.macros         enable row level security;
+alter table public.notices         enable row level security;
 alter table public.subscriptions  enable row level security;
 
 -- profiles
@@ -145,6 +157,13 @@ drop policy if exists "macros_author" on public.macros;
 create policy "macros_author"     on public.macros        for all
   using (auth.uid() = (select author_id from public.novels where id = novel_id));
 
+-- notices (public read, author write)
+drop policy if exists "notices_public_read" on public.notices;
+create policy "notices_public_read" on public.notices for select using (true);
+drop policy if exists "notices_author_write" on public.notices;
+create policy "notices_author_write" on public.notices for all
+  using (auth.uid() = (select author_id from public.novels where id = novel_id));
+
 -- subscriptions
 drop policy if exists "subs_own" on public.subscriptions;
 create policy "subs_own"          on public.subscriptions for all
@@ -182,3 +201,4 @@ create index if not exists db_chars_novel_idx      on public.db_characters(novel
 create index if not exists db_locs_novel_idx       on public.db_locations(novel_id);
 create index if not exists db_facs_novel_idx       on public.db_factions(novel_id);
 create index if not exists db_items_novel_idx      on public.db_items(novel_id);
+create index if not exists notices_novel_idx       on public.notices(novel_id);
