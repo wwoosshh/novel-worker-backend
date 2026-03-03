@@ -7,8 +7,9 @@ const router = express.Router({ mergeParams: true });
 
 const MacroSchema = z.object({
   label:    z.string().min(1).max(50),
-  content:  z.string().min(1).max(5000),
+  content:  z.string().max(5000).optional().default(""),
   shortcut: z.string().max(30).optional(),
+  actions:  z.array(z.unknown()).max(50).optional().nullable(),
 });
 
 async function checkOwnership(novelId: string, userId: string): Promise<boolean> {
@@ -41,9 +42,11 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   const parsed = MacroSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
+  const actionsJson = parsed.data.actions ? JSON.stringify(parsed.data.actions) : null;
+
   const row = await queryOne(
-    "INSERT INTO macros (novel_id, label, content, shortcut) VALUES ($1, $2, $3, $4) RETURNING *",
-    [novelId, parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null]
+    "INSERT INTO macros (novel_id, label, content, shortcut, actions) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    [novelId, parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null, actionsJson]
   );
   res.status(201).json({ data: row });
 });
@@ -58,9 +61,11 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   const parsed = MacroSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
+  const actionsJson = parsed.data.actions ? JSON.stringify(parsed.data.actions) : null;
+
   const row = await queryOne(
-    "UPDATE macros SET label = $1, content = $2, shortcut = $3 WHERE id = $4 AND novel_id = $5 RETURNING *",
-    [parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null, id, novelId]
+    "UPDATE macros SET label = $1, content = $2, shortcut = $3, actions = $4 WHERE id = $5 AND novel_id = $6 RETURNING *",
+    [parsed.data.label, parsed.data.content, parsed.data.shortcut ?? null, actionsJson, id, novelId]
   );
   if (!row) return res.status(404).json({ error: "매크로를 찾을 수 없습니다." });
   res.json({ data: row });
