@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":   "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test":  "vitest run"
+    "dev":     "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build":   "tsc",
+    "start":   "node dist/index.js",
+    "test":    "vitest run",
+    "migrate": "ts-node-dev --transpile-only --exit-child src/db/migrate.ts"
   },
   "keywords": [],
   "author": "",
