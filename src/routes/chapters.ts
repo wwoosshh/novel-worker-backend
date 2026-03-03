@@ -63,7 +63,10 @@ router.get("/:number", optionalAuth, async (req: AuthRequest, res: Response) => 
 
   // Increment view count only for non-author readers
   if (!isAuthor) {
-    query("UPDATE chapters SET view_count = view_count + 1 WHERE id = $1", [(chapter as any).id]).catch(() => {});
+    Promise.all([
+      query("UPDATE chapters SET view_count = view_count + 1 WHERE id = $1", [(chapter as any).id]),
+      query("UPDATE novels SET view_count = view_count + 1 WHERE id = $1", [novelId]),
+    ]).catch(() => {});
   }
 
   res.json({ data: chapter });
