@@ -10,6 +10,7 @@ import chaptersRouter from "./routes/chapters";
 import settingsRouter from "./routes/settings";
 import macrosRouter   from "./routes/macros";
 import noticesRouter  from "./routes/notices";
+import commentsRouter from "./routes/comments";
 import usersRouter    from "./routes/users";
 
 const app  = express();
@@ -43,6 +44,7 @@ app.use("/api/novels/:novelId/chapters",      chaptersRouter);
 app.use("/api/novels/:novelId/settings",      settingsRouter);
 app.use("/api/novels/:novelId/macros",        macrosRouter);
 app.use("/api/novels/:novelId/notices",       noticesRouter);
+app.use("/api/novels/:novelId/chapters/:chapterId/comments", commentsRouter);
 app.use("/api/users",                         usersRouter);
 
 /* ─── 404 ────────────────────────────────────────── */

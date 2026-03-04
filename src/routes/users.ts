@@ -6,10 +6,11 @@ import { z } from "zod";
 const router = Router();
 
 const UpdateProfileSchema = z.object({
-  display_name:   z.string().min(1).max(50).optional(),
-  bio:            z.string().max(500).optional(),
-  donation_link:  z.string().url().max(300).nullable().optional(),
-  donation_label: z.string().max(50).nullable().optional(),
+  display_name:          z.string().min(1).max(50).optional(),
+  bio:                   z.string().max(500).optional(),
+  donation_link:         z.string().url().max(300).nullable().optional(),
+  donation_label:        z.string().max(50).nullable().optional(),
+  notification_settings: z.record(z.string(), z.boolean()).optional(),
 });
 
 /* ─── GET /api/users/me ──────────────────────────── */
@@ -33,7 +34,8 @@ router.patch("/me", requireAuth, async (req: AuthRequest, res: Response) => {
 
   for (const [key, val] of Object.entries(updates)) {
     if (val !== undefined) {
-      params.push(val);
+      // jsonb 컬럼은 문자열로 직렬화
+      params.push(key === "notification_settings" ? JSON.stringify(val) : val);
       fields.push(`${key} = $${params.length}`);
     }
   }
