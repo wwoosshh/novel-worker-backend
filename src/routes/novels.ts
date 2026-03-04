@@ -15,7 +15,7 @@ const CreateNovelSchema = z.object({
 
 const UpdateNovelSchema = CreateNovelSchema.partial().extend({
   status:    z.enum(["ongoing", "completed", "hiatus"]).optional(),
-  cover_url: z.string().url().optional(),
+  cover_url: z.string().url().nullable().optional(),
   is_public: z.boolean().optional(),
 });
 
