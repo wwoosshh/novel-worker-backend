@@ -99,7 +99,8 @@ router.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
   const novel = await queryOne(
     `SELECT
        n.*,
-       p.display_name AS author_name, p.username AS author_username, p.bio AS author_bio
+       p.display_name AS author_name, p.username AS author_username, p.bio AS author_bio,
+       (SELECT COUNT(*) FROM subscriptions s WHERE s.novel_id = n.id) AS subscriber_count
      FROM novels n
      JOIN profiles p ON p.id = n.author_id
      WHERE n.id = $1

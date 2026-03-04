@@ -40,6 +40,18 @@ async function migrate() {
     console.log("스키마 적용 중...");
     await client.query(sql);
     console.log("스키마 적용 완료!");
+
+    // 추가 마이그레이션 파일 적용
+    const { readdirSync } = require("fs");
+    const migrationFiles = readdirSync(join(__dirname))
+      .filter((f: string) => f.startsWith("migrate-") && f.endsWith(".sql"))
+      .sort();
+    for (const file of migrationFiles) {
+      const migSql = readFileSync(join(__dirname, file), "utf8");
+      console.log(`마이그레이션 적용 중: ${file}`);
+      await client.query(migSql);
+      console.log(`마이그레이션 완료: ${file}`);
+    }
   } catch (err) {
     console.error("마이그레이션 실패:", err);
     process.exit(1);
