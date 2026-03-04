@@ -100,6 +100,7 @@ router.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
     `SELECT
        n.*,
        p.display_name AS author_name, p.username AS author_username, p.bio AS author_bio,
+       p.donation_link AS author_donation_link, p.donation_label AS author_donation_label,
        (SELECT COUNT(*) FROM subscriptions s WHERE s.novel_id = n.id) AS subscriber_count
      FROM novels n
      JOIN profiles p ON p.id = n.author_id

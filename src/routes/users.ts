@@ -6,8 +6,10 @@ import { z } from "zod";
 const router = Router();
 
 const UpdateProfileSchema = z.object({
-  display_name: z.string().min(1).max(50).optional(),
-  bio:          z.string().max(500).optional(),
+  display_name:   z.string().min(1).max(50).optional(),
+  bio:            z.string().max(500).optional(),
+  donation_link:  z.string().url().max(300).nullable().optional(),
+  donation_label: z.string().max(50).nullable().optional(),
 });
 
 /* ─── GET /api/users/me ──────────────────────────── */

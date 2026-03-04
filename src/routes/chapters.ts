@@ -51,9 +51,13 @@ router.get("/:number", optionalAuth, async (req: AuthRequest, res: Response) => 
   const isAuthor = novel.author_id === req.userId;
 
   const chapter = await queryOne(
-    `SELECT c.*, n.title AS novel_title, n.chapter_count AS novel_chapter_count
+    `SELECT c.*, n.title AS novel_title, n.chapter_count AS novel_chapter_count,
+            p.display_name AS author_name,
+            p.donation_link AS author_donation_link,
+            p.donation_label AS author_donation_label
      FROM chapters c
      JOIN novels n ON n.id = c.novel_id
+     JOIN profiles p ON p.id = n.author_id
      WHERE c.novel_id = $1 AND c.number = $2
        ${isAuthor ? "" : "AND c.is_public = true"}`,
     [novelId, chapterNum]
