@@ -5,6 +5,15 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/* ─── Environment variable validation ────────────── */
+const REQUIRED_ENV = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_ANON_KEY", "FRONTEND_URL"] as const;
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+
 import novelsRouter   from "./routes/novels";
 import chaptersRouter from "./routes/chapters";
 import settingsRouter from "./routes/settings";
@@ -51,8 +60,14 @@ app.use("/api/users",                         usersRouter);
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
 
 /* ─── Global error handler ───────────────────────── */
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    path: req.path,
+    error: err.message,
+    stack: err.stack,
+  }));
   res.status(500).json({ error: "서버 오류가 발생했습니다." });
 });
 

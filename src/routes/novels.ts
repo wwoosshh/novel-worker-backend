@@ -76,7 +76,7 @@ router.get("/", optionalAuth, async (req: AuthRequest, res: Response) => {
     query(countSql, params.slice(0, params.length - 2)),
   ]);
 
-  res.json({ data: novels, total: parseInt((countRows[0] as any).total) });
+  res.json({ data: novels, total: parseInt((countRows[0] as { total: string }).total, 10) });
 });
 
 /* ─── GET /api/novels/me/list — author's own novels ── */
@@ -106,7 +106,7 @@ router.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
      JOIN profiles p ON p.id = n.author_id
      WHERE n.id = $1
        AND (n.is_public = true OR n.author_id = $2)`,
-    [req.params.id, req.userId ?? "00000000-0000-0000-0000-000000000000"]
+    [req.params.id, req.userId ?? null]
   );
 
   if (!novel) return res.status(404).json({ error: "소설을 찾을 수 없습니다." });

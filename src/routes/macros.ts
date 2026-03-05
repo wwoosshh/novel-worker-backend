@@ -1,6 +1,7 @@
 import express, { type Response } from "express";
 import { query, queryOne } from "../lib/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { checkOwnership } from "../lib/ownership";
 import { z } from "zod";
 
 const router = express.Router({ mergeParams: true });
@@ -11,14 +12,6 @@ const MacroSchema = z.object({
   shortcut: z.string().max(30).optional(),
   actions:  z.array(z.unknown()).max(50).optional().nullable(),
 });
-
-async function checkOwnership(novelId: string, userId: string): Promise<boolean> {
-  const novel = await queryOne<{ author_id: string }>(
-    "SELECT author_id FROM novels WHERE id = $1",
-    [novelId]
-  );
-  return novel?.author_id === userId;
-}
 
 /* ─── GET /api/novels/:novelId/macros ────────────── */
 router.get("/", requireAuth, async (req: AuthRequest, res: Response) => {

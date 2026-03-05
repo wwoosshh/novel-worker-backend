@@ -1,6 +1,7 @@
 import express, { type Response } from "express";
 import { query, queryOne } from "../lib/db";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { checkOwnership } from "../lib/ownership";
 import { z } from "zod";
 
 const router = express.Router({ mergeParams: true });
@@ -10,14 +11,6 @@ const NoticeSchema = z.object({
   content:   z.string().min(1).max(10000),
   is_pinned: z.boolean().default(false),
 });
-
-async function checkOwnership(novelId: string, userId: string): Promise<boolean> {
-  const novel = await queryOne<{ author_id: string }>(
-    "SELECT author_id FROM novels WHERE id = $1",
-    [novelId]
-  );
-  return novel?.author_id === userId;
-}
 
 /* ─── GET /api/novels/:novelId/notices ──────────────── */
 router.get("/", optionalAuth, async (req: AuthRequest, res: Response) => {
