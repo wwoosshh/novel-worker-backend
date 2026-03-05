@@ -21,6 +21,7 @@ import macrosRouter   from "./routes/macros";
 import noticesRouter  from "./routes/notices";
 import commentsRouter from "./routes/comments";
 import usersRouter    from "./routes/users";
+import { startScheduler } from "./lib/scheduler";
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -75,6 +76,7 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Novel Worker API listening on port ${PORT}`);
+    startScheduler();
   });
 }
 

@@ -10,6 +10,7 @@ const SaveChapterSchema = z.object({
   content:      z.record(z.string(), z.unknown()),  // Tiptap JSON
   content_text: z.string().optional(),          // plain text for search
   is_public:    z.boolean().default(false),
+  scheduled_at: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
 /* ─── GET /api/novels/:novelId/chapters ──────────── */
@@ -27,7 +28,7 @@ router.get("/", optionalAuth, async (req: AuthRequest, res: Response) => {
   const onlyPublic = !isAuthor;
 
   const chapters = await query(
-    `SELECT id, number, title, is_public, is_paid, view_count, created_at, updated_at
+    `SELECT id, number, title, is_public, is_paid, view_count, scheduled_at, created_at, updated_at
      FROM chapters
      WHERE novel_id = $1 ${onlyPublic ? "AND is_public = true" : ""}
      ORDER BY number ASC`,
@@ -126,13 +127,24 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const { title, content, content_text, is_public } = parsed.data;
+  let scheduled_at = parsed.data.scheduled_at ?? null;
+
+  // 즉시 공개가 예약보다 우선
+  if (is_public) {
+    scheduled_at = null;
+  }
+
+  // 예약 시간이 과거면 거부
+  if (scheduled_at && new Date(scheduled_at) <= new Date()) {
+    return res.status(400).json({ error: "예약 시간은 현재보다 미래여야 합니다." });
+  }
 
   const chapter = await queryOne(
     `UPDATE chapters
-     SET title = $1, content = $2, content_text = $3, is_public = $4, updated_at = NOW()
-     WHERE id = $5 AND novel_id = $6
+     SET title = $1, content = $2, content_text = $3, is_public = $4, scheduled_at = $5, updated_at = NOW()
+     WHERE id = $6 AND novel_id = $7
      RETURNING *`,
-    [title, JSON.stringify(content), content_text ?? null, is_public, id, novelId]
+    [title, JSON.stringify(content), content_text ?? null, is_public, scheduled_at, id, novelId]
   );
 
   if (!chapter) return res.status(404).json({ error: "화를 찾을 수 없습니다." });
