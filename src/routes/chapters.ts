@@ -155,6 +155,50 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   res.json({ data: chapter });
 });
 
+/* ─── PATCH /api/novels/:novelId/chapters/:id/schedule ── */
+const UpdateScheduleSchema = z.object({
+  is_public:    z.boolean(),
+  scheduled_at: z.string().datetime({ offset: true }).nullable(),
+});
+
+router.patch("/:id/schedule", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { novelId, id } = req.params;
+
+  const novel = await queryOne<{ author_id: string }>(
+    "SELECT author_id FROM novels WHERE id = $1",
+    [novelId]
+  );
+  if (!novel)              return res.status(404).json({ error: "소설을 찾을 수 없습니다." });
+  if (novel.author_id !== req.userId) return res.status(403).json({ error: "권한이 없습니다." });
+
+  const parsed = UpdateScheduleSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  let { is_public, scheduled_at } = parsed.data;
+
+  // 즉시 공개면 예약 무시
+  if (is_public) {
+    scheduled_at = null;
+  }
+
+  // 예약 시간이 과거면 거부
+  if (scheduled_at && new Date(scheduled_at) <= new Date()) {
+    return res.status(400).json({ error: "예약 시간은 현재보다 미래여야 합니다." });
+  }
+
+  const chapter = await queryOne(
+    `UPDATE chapters
+     SET is_public = $1, scheduled_at = $2, updated_at = NOW()
+     WHERE id = $3 AND novel_id = $4
+     RETURNING id, novel_id, number, title, is_public, scheduled_at, created_at, updated_at`,
+    [is_public, scheduled_at, id, novelId]
+  );
+
+  if (!chapter) return res.status(404).json({ error: "화를 찾을 수 없습니다." });
+
+  res.json({ data: chapter });
+});
+
 /* ─── DELETE /api/novels/:novelId/chapters/:id ───── */
 router.delete("/:id", requireAuth, async (req: AuthRequest, res: Response) => {
   const { novelId, id } = req.params;

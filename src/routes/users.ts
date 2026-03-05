@@ -51,6 +51,26 @@ router.patch("/me", requireAuth, async (req: AuthRequest, res: Response) => {
   res.json({ data: profile });
 });
 
+/* ─── GET /api/users/me/calendar ──────────────────── */
+router.get("/me/calendar", requireAuth, async (req: AuthRequest, res: Response) => {
+  const chapters = await query(
+    `SELECT c.id, c.novel_id, c.number, c.title, c.is_public, c.scheduled_at,
+            c.created_at, c.updated_at, n.title AS novel_title
+     FROM chapters c
+     JOIN novels n ON n.id = c.novel_id
+     WHERE n.author_id = $1
+     ORDER BY COALESCE(c.scheduled_at, c.updated_at) ASC`,
+    [req.userId]
+  );
+
+  const novels = await query(
+    `SELECT id, title FROM novels WHERE author_id = $1 ORDER BY updated_at DESC`,
+    [req.userId]
+  );
+
+  res.json({ data: chapters, novels });
+});
+
 /* ─── GET /api/users/me/subscriptions ───────────── */
 router.get("/me/subscriptions", requireAuth, async (req: AuthRequest, res: Response) => {
   const subs = await query(
