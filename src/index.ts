@@ -20,6 +20,7 @@ import settingsRouter from "./routes/settings";
 import macrosRouter   from "./routes/macros";
 import noticesRouter  from "./routes/notices";
 import commentsRouter from "./routes/comments";
+import feedbackRouter from "./routes/feedback";
 import usersRouter    from "./routes/users";
 import { startScheduler } from "./lib/scheduler";
 
@@ -55,6 +56,7 @@ app.use("/api/novels/:novelId/settings",      settingsRouter);
 app.use("/api/novels/:novelId/macros",        macrosRouter);
 app.use("/api/novels/:novelId/notices",       noticesRouter);
 app.use("/api/novels/:novelId/chapters/:chapterId/comments", commentsRouter);
+app.use("/api/feedback",                       feedbackRouter);
 app.use("/api/users",                         usersRouter);
 
 /* ─── 404 ────────────────────────────────────────── */
